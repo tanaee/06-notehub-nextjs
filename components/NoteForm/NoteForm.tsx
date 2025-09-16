@@ -11,8 +11,11 @@ export type NoteFormProps = {
 };
 
 const validationSchema = Yup.object({
-  title: Yup.string().required("Title is required").min(3, "Must be at least 3 characters"),
-  content: Yup.string().max(500, "Must be at most 500 characters"), 
+  title: Yup.string()
+    .required("Title is required")
+    .min(3, "Must be at least 3 characters"),
+  content: Yup.string()
+    .max(500, "Must be at most 500 characters"), 
   tag: Yup.mixed<Note["tag"]>().oneOf(["Todo", "Work", "Personal", "Meeting", "Shopping"]),
 });
 
@@ -32,8 +35,13 @@ export default function NoteForm({ onClose }: NoteFormProps) {
       initialValues={{ title: "", content: "", tag: "Todo" as Note["tag"] }}
       validationSchema={validationSchema}
       onSubmit={(values, { resetForm }) => {
-        mutation.mutate(values);
-        resetForm();
+        mutation.mutate(values, {
+          onSuccess: () => {
+            resetForm();
+            queryClient.invalidateQueries({ queryKey: ["notes"] });
+            onClose();
+          },
+        });
       }}
     >
       {({ isSubmitting }) => (
